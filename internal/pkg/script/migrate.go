@@ -6,7 +6,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/pkg/errors"
 	"log"
-	"shifo-website-backend/internal/pkg/repository/postgres"
+	"shifo-backend-website/internal/pkg/repository/postgres"
 )
 
 // ErrHelp provides context that help was given.

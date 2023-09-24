@@ -3,7 +3,7 @@ package file
 import (
 	"context"
 	"errors"
-	"gitlab.com/admin_service_shifo/internal/pkg"
+	"shifo-backend-website/internal/pkg"
 	"io"
 	"log"
 	"math/rand"

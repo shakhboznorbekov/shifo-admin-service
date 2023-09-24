@@ -22,20 +22,7 @@ func NewController(user User, auth Auth) *Controller {
 	return &Controller{user, auth}
 }
 
-// AdminGetUserList godoc
-// @Security ApiKeyAuth
-// @Summary Get User List
-// @Description  Get User List
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param offset query integer false "offset"
-// @Param limit query integer false "limit"
-// @Param username query string false "username"
-// @Success 200 {object} user.AdminGetListResponse
-// @Response 400 {object} string "Invalid argument"
-// @Failure 500 {object} string "Server Error"
-// @Router /api/v1/admin/user/list [GET]
+
 func (cl Controller) AdminGetUserList(c *gin.Context) {
 	var filter user2.Filter
 	fieldErrors := make([]pkg.FieldError, 0)
@@ -85,18 +72,7 @@ func (cl Controller) AdminGetUserList(c *gin.Context) {
 	})
 }
 
-// AdminGetUserDetail godoc
-// @Security ApiKeyAuth
-// @Summary Get User ById
-// @Description  Get User ById
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param id path string true "id"
-// @Success 200 {object} user.AdminDetailResponseSwagger
-// @Response 400 {object} string "Invalid argument"
-// @Failure 500 {object} string "Server Error"
-// @Router /api/v1/admin/user/{id} [GET]
+
 func (cl Controller) AdminGetUserDetail(c *gin.Context) {
 	idParam, err := request.GetParam(c, reflect.String, "id")
 	var id string
@@ -119,18 +95,7 @@ func (cl Controller) AdminGetUserDetail(c *gin.Context) {
 	})
 }
 
-// AdminCreateUser godoc
-// @Security ApiKeyAuth
-// @Summary  User
-// @Description  Create User
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param user body user.AdminCreateRequest true "user"
-// @Success 200 {object} user.AdminCreateResponseSwagger
-// @Response 400 {object} string "Invalid argument"
-// @Failure 500 {object} string "Server Error"
-// @Router /api/v1/admin/user/create [POST]
+
 func (cl Controller) AdminCreateUser(c *gin.Context) {
 	var data user2.AdminCreateRequest
 
@@ -155,19 +120,7 @@ func (cl Controller) AdminCreateUser(c *gin.Context) {
 	})
 }
 
-// AdminUpdateUser godoc
-// @Security ApiKeyAuth
-// @Summary Update User
-// @Description  Update User
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param id path string true "id"
-// @Param user body  user.AdminUpdateRequest true "user"
-// @Success 200 {object} response.StatusOk
-// @Response 400 {object} string "Invalid argument"
-// @Failure 500 {object} string "Server Error"
-// @Router /api/v1/admin/user/{id} [PUT]
+
 func (cl Controller) AdminUpdateUser(c *gin.Context) {
 	idParam, err := request.GetParam(c, reflect.String, "id")
 	var id string
@@ -207,18 +160,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 	})
 }
 
-// AdminDeleteUser godoc
-// @Security ApiKeyAuth
-// @Summary  Delete User
-// @Description  Delete User
-// @Tags User
-// @Accept json
-// @Produce json
-// @Param id path string true "id"
-// @Success 200 {object} response.StatusOk
-// @Response 400 {object} string "Invalid argument"
-// @Failure 500 {object} string "Server Error"
-// @Router /api/v1/admin/user/{id} [DELETE]
+
 func (cl Controller) AdminDeleteUser(c *gin.Context) {
 	idParam, err1 := request.GetParam(c, reflect.String, "id")
 	var id string
