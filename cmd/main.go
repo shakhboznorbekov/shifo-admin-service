@@ -6,9 +6,9 @@ import (
 	auth2 "shifo-backend-website/internal/auth"
 	"shifo-backend-website/internal/controller/http/v1/auth"
 
-	// contact_controller "shifo-backend-website/internal/controller/http/v1/contact"
-	// faq_controller "shifo-backend-website/internal/controller/http/v1/faq"
-	// menu_controller "shifo-backend-website/internal/controller/http/v1/menu"
+	doctor_controller "shifo-backend-website/internal/controller/http/v1/doctor"
+	specialty_controller "shifo-backend-website/internal/controller/http/v1/specialty"
+	workplace_controller "shifo-backend-website/internal/controller/http/v1/workplace"
 	// opportunity_controller "shifo-backend-website/internal/controller/http/v1/opportunity"
 	// post_controller "shifo-backend-website/internal/controller/http/v1/post"
 	// request_controller "shifo-backend-website/internal/controller/http/v1/request"
@@ -16,9 +16,9 @@ import (
 	"shifo-backend-website/internal/pkg/config"
 	"shifo-backend-website/internal/pkg/repository/postgres"
 	"shifo-backend-website/internal/pkg/script"
-	// contact_repo "shifo-backend-website/internal/repository/postgres/contact"
-	// faq_repo "shifo-backend-website/internal/repository/postgres/faq"
-	// menu_repo "shifo-backend-website/internal/repository/postgres/menu"
+	doctor_repo "shifo-backend-website/internal/repository/postgres/doctor"
+	specialty_repo "shifo-backend-website/internal/repository/postgres/specialty"
+	workplace_repo "shifo-backend-website/internal/repository/postgres/workplace"
 	// opportunity_repo "shifo-backend-website/internal/repository/postgres/opportunity"
 	// opportunity_file_repo "shifo-backend-website/internal/repository/postgres/opportunity_file"
 	// post_repo "shifo-backend-website/internal/repository/postgres/post"
@@ -45,9 +45,9 @@ func main() {
 
 	//repository
 	userRepo := user_repo.NewRepository(postgresDB)
-	// postRepo := post_repo.NewRepository(postgresDB)
-	// postFileRepo := post_file_repo.NewRepository(postgresDB)
-	// faqRepo := faq_repo.NewRepository(postgresDB)
+	doctorRepo := doctor_repo.NewRepository(postgresDB)
+	specialtyRepo := specialty_repo.NewRepository(postgresDB)
+	workplaceRepo := workplace_repo.NewRepository(postgresDB)
 	// opportunityRepo := opportunity_repo.NewRepository(postgresDB)
 	// opportunityFileRepo := opportunity_file_repo.NewRepository(postgresDB)
 	// menuRepo := menu_repo.NewRepository(postgresDB)
@@ -57,16 +57,16 @@ func main() {
 
 	//controller
 	userController := user_controller.NewController(userRepo, authenticator)
-	// postController := post_controller.NewController(postRepo, postFileRepo)
+	doctorController := doctor_controller.NewController(doctorRepo)
 	authController := auth.NewController(userRepo, authenticator)
-	// faqController := faq_controller.NewController(faqRepo)
-	// opportunityController := opportunity_controller.NewController(opportunityRepo, opportunityFileRepo)
+	specialtyController := specialty_controller.NewController(specialtyRepo)
+	workplaceController := workplace_controller.NewController(workplaceRepo)
 	// menuController := menu_controller.NewController(menuRepo)
 	// requestController := request_controller.NewController(requestRepo, requestFileRepo)
 	// contactController := contact_controller.NewController(contactRepo)
 
 	// router
-	r := router.New(authenticator, userController,authController)
+	r := router.New(authenticator, userController, authController, doctorController, specialtyController, workplaceController)
 	log.Fatalln(r.Init(fmt.Sprintf(":%s", cfg.Port)))
 
 }

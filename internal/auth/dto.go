@@ -3,23 +3,23 @@ package auth
 import "github.com/golang-jwt/jwt"
 
 type SignIn struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	FirstName string `json:"first_name"`
+	Password  string `json:"password"`
 }
 
 type Claims struct {
-	Username string `json:"username"`
+	FirstName string `json:"first_name"`
 	jwt.StandardClaims
 }
 
 type GenerateToken struct {
-	Username string
-	Role     string
+	FirstName string
+	Username  string
 }
 
 type TokenData struct {
-	Username string
-	UserId   string
+	FirstName string
+	UserId    string
 }
 type AuthResponse struct {
 	Token string `json:"token"`

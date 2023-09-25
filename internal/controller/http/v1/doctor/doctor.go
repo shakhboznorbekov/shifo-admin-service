@@ -1,29 +1,27 @@
-package user
+package doctor
 
 import (
 	"errors"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"reflect"
 
-	"github.com/gin-gonic/gin"
-
 	"shifo-backend-website/internal/pkg"
-	user2 "shifo-backend-website/internal/repository/postgres/user"
+	doc "shifo-backend-website/internal/repository/postgres/doctor"
 	"shifo-backend-website/internal/service/request"
 	"shifo-backend-website/internal/service/response"
 )
 
 type Controller struct {
-	user User
-	auth Auth
+	doctor Doctor
 }
 
-func NewController(user User, auth Auth) *Controller {
-	return &Controller{user, auth}
+func NewController(doctor Doctor) *Controller {
+	return &Controller{doctor: doctor}
 }
 
-func (cl Controller) AdminGetUserList(c *gin.Context) {
-	var filter user2.Filter
+func (cl Controller) AdminGetDoctorList(c *gin.Context) {
+	var filter doc.Filter
 	fieldErrors := make([]pkg.FieldError, 0)
 
 	limit, err := request.GetQuery(c, reflect.Int, "limit")
@@ -56,7 +54,7 @@ func (cl Controller) AdminGetUserList(c *gin.Context) {
 		return
 	}
 
-	data, count, er := cl.user.AdminGetList(c, filter)
+	data, count, er := cl.doctor.AdminGetList(c, filter)
 	if er != nil {
 		response.RespondError(c, er)
 	}
@@ -71,7 +69,7 @@ func (cl Controller) AdminGetUserList(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminGetUserDetail(c *gin.Context) {
+func (cl Controller) AdminGetDoctorDetail(c *gin.Context) {
 	idParam, err := request.GetParam(c, reflect.String, "id")
 	var id string
 	if err != nil {
@@ -80,7 +78,7 @@ func (cl Controller) AdminGetUserDetail(c *gin.Context) {
 		id = value
 	}
 
-	data, er := cl.user.AdminGetById(c, id)
+	data, er := cl.doctor.AdminGetById(c, id)
 	if er != nil {
 		response.RespondError(c, er)
 
@@ -93,8 +91,8 @@ func (cl Controller) AdminGetUserDetail(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminCreateUser(c *gin.Context) {
-	var data user2.AdminCreateRequest
+func (cl Controller) AdminCreateDoctor(c *gin.Context) {
+	var data doc.AdminCreateRequest
 
 	er := request.BindFunc(c, &data)
 	if er != nil {
@@ -103,7 +101,7 @@ func (cl Controller) AdminCreateUser(c *gin.Context) {
 		return
 	}
 
-	detail, er := cl.user.AdminCreate(c, data)
+	detail, er := cl.doctor.AdminCreate(c, data)
 	if er != nil {
 		response.RespondError(c, er)
 
@@ -117,7 +115,7 @@ func (cl Controller) AdminCreateUser(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminUpdateUser(c *gin.Context) {
+func (cl Controller) AdminUpdateDoctor(c *gin.Context) {
 	idParam, err := request.GetParam(c, reflect.String, "id")
 	var id string
 	if err != nil {
@@ -125,7 +123,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 	} else if value, ok := idParam.(string); ok {
 		id = value
 	}
-	var data user2.AdminUpdateRequest
+	var data doc.AdminUpdateRequest
 
 	er := request.BindFunc(c, &data)
 	if er != nil {
@@ -140,7 +138,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 		data.Id = id
 	}
 
-	err2 := cl.user.AdminUpdate(c, data)
+	err2 := cl.doctor.AdminUpdate(c, data)
 	if err2 != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"message": err2.Err.Error(),
@@ -156,7 +154,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminDeleteUser(c *gin.Context) {
+func (cl Controller) AdminDeleteDoctor(c *gin.Context) {
 	idParam, err1 := request.GetParam(c, reflect.String, "id")
 	var id string
 	if err1 != nil {
@@ -165,7 +163,7 @@ func (cl Controller) AdminDeleteUser(c *gin.Context) {
 		id = value
 	}
 
-	err := cl.user.AdminDelete(c, id, "Admin")
+	err := cl.doctor.AdminDelete(c, id, "Admin")
 	if err != nil {
 		response.RespondError(c, err)
 		return

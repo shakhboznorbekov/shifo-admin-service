@@ -27,8 +27,8 @@ func (a Auth) GenerateToken(ctx context.Context, data GenerateToken) (string, er
 
 	claims := token.Claims.(jwt.MapClaims)
 	claims["exp"] = time.Now().Add(12 * time.Hour).Unix()
+	claims["first_name"] = data.FirstName
 	claims["username"] = data.Username
-	claims["role"] = data.Role
 
 	tokenString, err := token.SignedString([]byte(config.GetConf().JWTKey))
 	if err != nil {
@@ -49,7 +49,7 @@ func (a Auth) IsValidToken(ctx context.Context, tokenStr string) (entity.User, e
 		return entity.User{}, errors.New("invalid token")
 	}
 
-	query := fmt.Sprintf(`SELECT id, username,role FROM users WHERE username = '%s' AND deleted_at IS NULL`, claims.Username)
+	query := fmt.Sprintf(`SELECT id, first_name,username FROM users WHERE first_name = '%s' AND deleted_at IS NULL`, claims.FirstName)
 
 	rows, err := a.postgresDB.QueryContext(ctx, query)
 	if err != nil {
@@ -59,7 +59,7 @@ func (a Auth) IsValidToken(ctx context.Context, tokenStr string) (entity.User, e
 	var detail entity.User
 
 	for rows.Next() {
-		if err = rows.Scan(&detail.Id, &detail.Username, &detail.Role); err != nil {
+		if err = rows.Scan(&detail.Id, &detail.FirstName, &detail.Username); err != nil {
 			return entity.User{}, err
 		}
 	}
@@ -73,13 +73,13 @@ func (a Auth) GetTokenData(ctx context.Context, token string) (TokenData, error)
 		return TokenData{}, err
 	}
 
-	if detail.Username == "" {
+	if detail.FirstName == "" {
 		return TokenData{}, errors.New("no such user")
 	}
 
 	var tokenData TokenData
 
-	tokenData.Username = detail.Username
+	tokenData.FirstName = detail.FirstName
 	tokenData.UserId = detail.Id
 
 	return tokenData, nil
@@ -117,7 +117,7 @@ func (a Auth) HasPermission(roles ...string) gin.HandlerFunc {
 
 				hasPermission := false
 				for _, r := range roles {
-					if userDetail.Role == r {
+					if userDetail.Username == r {
 						hasPermission = true
 						break
 					}
@@ -129,7 +129,7 @@ func (a Auth) HasPermission(roles ...string) gin.HandlerFunc {
 					})
 				}
 
-				c.Set("role", userDetail.Role)
+				c.Set("username", userDetail.Username)
 				c.Set("userId", userDetail.Id)
 				c.Set("lang", lang)
 				c.Next()

@@ -1,12 +1,10 @@
-create table users
+create table workplaces
 (
     id         uuid primary key not null ,
-    first_name varchar,
-    last_name  varchar,
-    username   varchar (150),
-    password   varchar,
-    status     user_statuses,
-    gmail      varchar,
+    name       varchar not null,
+    address    varchar,
+    lat        float,
+    long       float,
     created_at timestamp default now(),
     deleted_at timestamp,
     updated_at timestamp,
@@ -14,6 +12,4 @@ create table users
     created_by uuid references users(id),
     deleted_by uuid references users(id)
 );
-
-CREATE TYPE user_statuses AS ENUM ('at_work', 'off_work');
 

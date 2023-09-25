@@ -54,7 +54,7 @@ func (d Database) DeleteRow(ctx context.Context, table, id, role string) *pkg.Er
 		}
 	}
 
-	ctxRole, ok := ctx.Value("role").(string)
+	ctxRole, ok := ctx.Value("username").(string)
 
 	if !ok || (ctxRole == "") {
 		return &pkg.Error{
@@ -151,7 +151,7 @@ func (d Database) CheckCtx(ctx context.Context) (CtxData, *pkg.Error) {
 			Field: "user_id",
 		})
 	}
-	ctxRole, ok := ctx.Value("role").(string)
+	ctxRole, ok := ctx.Value("username").(string)
 	if !ok {
 		fieldErrors = append(fieldErrors, pkg.FieldError{
 			Err:   errors.New("missing field in ctx"),

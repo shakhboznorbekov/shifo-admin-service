@@ -15,5 +15,5 @@ type Auth interface {
 }
 
 type User interface {
-	GetByUsername(ctx context.Context, username string) (user.AdminGetDetail, *pkg.Error)
+	GetByFirstName(ctx context.Context, firstName string) (user.AdminGetDetail, *pkg.Error)
 }

@@ -1,29 +1,26 @@
-package user
+package specialty
 
 import (
 	"errors"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"reflect"
-
-	"github.com/gin-gonic/gin"
-
 	"shifo-backend-website/internal/pkg"
-	user2 "shifo-backend-website/internal/repository/postgres/user"
+	specialty "shifo-backend-website/internal/repository/postgres/specialty"
 	"shifo-backend-website/internal/service/request"
 	"shifo-backend-website/internal/service/response"
 )
 
 type Controller struct {
-	user User
-	auth Auth
+	specialty Specialty
 }
 
-func NewController(user User, auth Auth) *Controller {
-	return &Controller{user, auth}
+func NewController(specialty Specialty) *Controller {
+	return &Controller{specialty: specialty}
 }
 
-func (cl Controller) AdminGetUserList(c *gin.Context) {
-	var filter user2.Filter
+func (cl Controller) AdminGetSpecialtyList(c *gin.Context) {
+	var filter specialty.Filter
 	fieldErrors := make([]pkg.FieldError, 0)
 
 	limit, err := request.GetQuery(c, reflect.Int, "limit")
@@ -40,11 +37,11 @@ func (cl Controller) AdminGetUserList(c *gin.Context) {
 		filter.Offset = value
 	}
 
-	firstName, err := request.GetQuery(c, reflect.String, "first_name")
+	name, err := request.GetQuery(c, reflect.String, "name")
 	if err != nil {
 		fieldErrors = append(fieldErrors, *err)
-	} else if value, ok := firstName.(*string); ok {
-		filter.FirstName = value
+	} else if value, ok := name.(*string); ok {
+		filter.Name = value
 	}
 
 	if len(fieldErrors) > 0 {
@@ -56,7 +53,7 @@ func (cl Controller) AdminGetUserList(c *gin.Context) {
 		return
 	}
 
-	data, count, er := cl.user.AdminGetList(c, filter)
+	data, count, er := cl.specialty.AdminGetList(c, filter)
 	if er != nil {
 		response.RespondError(c, er)
 	}
@@ -71,7 +68,7 @@ func (cl Controller) AdminGetUserList(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminGetUserDetail(c *gin.Context) {
+func (cl Controller) AdminGetSpecialtyDetail(c *gin.Context) {
 	idParam, err := request.GetParam(c, reflect.String, "id")
 	var id string
 	if err != nil {
@@ -80,7 +77,7 @@ func (cl Controller) AdminGetUserDetail(c *gin.Context) {
 		id = value
 	}
 
-	data, er := cl.user.AdminGetById(c, id)
+	data, er := cl.specialty.AdminGetById(c, id)
 	if er != nil {
 		response.RespondError(c, er)
 
@@ -93,8 +90,8 @@ func (cl Controller) AdminGetUserDetail(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminCreateUser(c *gin.Context) {
-	var data user2.AdminCreateRequest
+func (cl Controller) AdminCreateSpecialty(c *gin.Context) {
+	var data specialty.AdminCreateRequest
 
 	er := request.BindFunc(c, &data)
 	if er != nil {
@@ -103,7 +100,7 @@ func (cl Controller) AdminCreateUser(c *gin.Context) {
 		return
 	}
 
-	detail, er := cl.user.AdminCreate(c, data)
+	detail, er := cl.specialty.AdminCreate(c, data)
 	if er != nil {
 		response.RespondError(c, er)
 
@@ -117,7 +114,7 @@ func (cl Controller) AdminCreateUser(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminUpdateUser(c *gin.Context) {
+func (cl Controller) AdminUpdateSpecialty(c *gin.Context) {
 	idParam, err := request.GetParam(c, reflect.String, "id")
 	var id string
 	if err != nil {
@@ -125,7 +122,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 	} else if value, ok := idParam.(string); ok {
 		id = value
 	}
-	var data user2.AdminUpdateRequest
+	var data specialty.AdminUpdateRequest
 
 	er := request.BindFunc(c, &data)
 	if er != nil {
@@ -140,7 +137,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 		data.Id = id
 	}
 
-	err2 := cl.user.AdminUpdate(c, data)
+	err2 := cl.specialty.AdminUpdate(c, data)
 	if err2 != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"message": err2.Err.Error(),
@@ -156,7 +153,7 @@ func (cl Controller) AdminUpdateUser(c *gin.Context) {
 	})
 }
 
-func (cl Controller) AdminDeleteUser(c *gin.Context) {
+func (cl Controller) AdminDeleteSpecialty(c *gin.Context) {
 	idParam, err1 := request.GetParam(c, reflect.String, "id")
 	var id string
 	if err1 != nil {
@@ -165,7 +162,7 @@ func (cl Controller) AdminDeleteUser(c *gin.Context) {
 		id = value
 	}
 
-	err := cl.user.AdminDelete(c, id, "Admin")
+	err := cl.specialty.AdminDelete(c, id, "Admin")
 	if err != nil {
 		response.RespondError(c, err)
 		return

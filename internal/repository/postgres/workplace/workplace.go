@@ -1,18 +1,15 @@
-package user
+package workplace
 
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"strings"
-	"time"
-
 	"github.com/google/uuid"
-
+	"net/http"
 	"shifo-backend-website/internal/entity"
 	"shifo-backend-website/internal/pkg"
 	"shifo-backend-website/internal/pkg/repository/postgres"
-	"shifo-backend-website/internal/service/hash"
+	"strings"
+	"time"
 )
 
 type Repository struct {
@@ -27,9 +24,9 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	whereQuery := "WHERE deleted_at IS NULL"
 	var limitQuery, offsetQuery string
 
-	if filter.FirstName != nil {
-		firstName := strings.Replace(*filter.FirstName, " ", "", -1)
-		whereQuery += fmt.Sprintf(" AND REPLACE(first_name, ' ', '') ilike '%s'", "%"+firstName+"%")
+	if filter.Name != nil {
+		name := strings.Replace(*filter.Name, " ", "", -1)
+		whereQuery += fmt.Sprintf(" AND REPLACE(name, ' ', '') ilike '%s'", "%"+name+"%")
 	}
 
 	if filter.Limit != nil {
@@ -42,28 +39,28 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	query := fmt.Sprintf(`
 		SELECT
 			id,
-			username,
-			first_name,
-			last_name,
-			status
+			name,
+			address,
+			lat,
+			long
 		FROM
-		    users
+		    workplaces
 		%s %s %s
 	`, whereQuery, limitQuery, offsetQuery)
 
 	rows, er := r.QueryContext(ctx, query)
 	if er != nil {
 		return nil, 0, &pkg.Error{
-			Err:    pkg.WrapError(er, "selecting user list"),
+			Err:    pkg.WrapError(er, "selecting workplaces list"),
 			Status: http.StatusInternalServerError,
 		}
 	}
 	var list []AdminGetListResponse
 	for rows.Next() {
 		var detail AdminGetListResponse
-		if er = rows.Scan(&detail.Id, &detail.Username, &detail.FirstName, &detail.LastName, &detail.Status); er != nil {
+		if er = rows.Scan(&detail.Id, &detail.Name, &detail.Address, &detail.Lat, &detail.Long); er != nil {
 			return nil, 0, &pkg.Error{
-				Err:    pkg.WrapError(er, "scanning user"),
+				Err:    pkg.WrapError(er, "scanning workplaces"),
 				Status: http.StatusInternalServerError,
 			}
 		}
@@ -73,13 +70,13 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	SELECT
 	COUNT(*)
 	FROM
-		users
+		workplaces
 	%s
 	`, whereQuery)
 	countRows, er := r.QueryContext(ctx, countQuery)
 	if er != nil {
 		return nil, 0, &pkg.Error{
-			Err:    pkg.WrapError(er, "selecting user count"),
+			Err:    pkg.WrapError(er, "selecting workplaces count"),
 			Status: http.StatusInternalServerError,
 		}
 	}
@@ -88,7 +85,7 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	for countRows.Next() {
 		if er = countRows.Scan(&count); er != nil {
 			return nil, 0, &pkg.Error{
-				Err:    pkg.WrapError(er, "scanning user count"),
+				Err:    pkg.WrapError(er, "scanning workplaces count"),
 				Status: http.StatusInternalServerError,
 			}
 		}
@@ -109,20 +106,6 @@ func (r Repository) AdminGetById(ctx context.Context, id string) (AdminGetDetail
 	return detail, nil
 }
 
-func (r Repository) GetByFirstName(ctx context.Context, firstName string) (AdminGetDetail, *pkg.Error) {
-	var detail AdminGetDetail
-	err := r.NewSelect().Model(&detail).Where("first_name = ?", firstName).Scan(ctx)
-
-	if err != nil {
-		return AdminGetDetail{}, &pkg.Error{
-			Err:    err,
-			Status: http.StatusInternalServerError,
-		}
-	}
-
-	return detail, nil
-}
-
 func (r Repository) AdminCreate(ctx context.Context, request AdminCreateRequest) (AdminCreateResponse, *pkg.Error) {
 	var response AdminCreateResponse
 
@@ -130,27 +113,18 @@ func (r Repository) AdminCreate(ctx context.Context, request AdminCreateRequest)
 	if er != nil {
 		return AdminCreateResponse{}, er
 	}
-	if err := r.ValidateStruct(&request, "FirstName", "LastName", "Username", "Status", "Gmail", "Password"); err != nil {
+	if err := r.ValidateStruct(&request, "Name"); err != nil {
 		return AdminCreateResponse{}, err
 	}
 
 	response.Id = uuid.NewString()
-	response.FirstName = request.FirstName
-	response.LastName = request.LastName
-	response.Username = request.Username
-	hashPassword, err2 := hash.HashPassword(request.Password)
-	if err2 != nil {
-		return AdminCreateResponse{}, &pkg.Error{
-			Err:    err2,
-			Status: http.StatusInternalServerError,
-		}
-	}
-	response.Status = request.Status
-	response.Password = hashPassword
-	response.Gmail = request.Gmail
+	response.Name = request.Name
+	response.Address = request.Address
+	response.Lat = request.Lat
+	response.Long = request.Long
 	response.CreatedBy = &dataCtx.UserId
 	response.CreatedAt = time.Now()
-	err := r.ManualInsert(ctx, &response, "AdminCreate")
+	err := r.ManualInsert(ctx, &response, "AdminCreate workplaces")
 	if err != nil {
 		return AdminCreateResponse{}, err
 	}
@@ -167,39 +141,32 @@ func (r Repository) AdminUpdate(ctx context.Context, request AdminUpdateRequest)
 	if er != nil {
 		return er
 	}
-	q := r.NewUpdate().Table("users").Where("deleted_at is null AND id = ?", request.Id)
+	q := r.NewUpdate().Table("workplaces").Where("deleted_at is null AND id = ?", request.Id)
 
-	if request.FirstName != nil {
-		q.Set("first_name = ?", request.FirstName)
-
-	}
-	if request.LastName != nil {
-		q.Set("last_name = ?", request.LastName)
+	if request.Name != nil {
+		q.Set("name = ?", request.Name)
 
 	}
-	if request.Username != nil {
-		q.Set("username = ?", request.Username)
+	if request.Address != nil {
+		q.Set("address = ?", request.Address)
 
 	}
-	if request.Password != nil {
-		q.Set("password = ?", request.Password)
+	if request.Lat != nil {
+		q.Set("lat = ?", request.Lat)
 
 	}
-	if request.Status != nil {
-		q.Set("status = ?", request.Status)
+	if request.Long != nil {
+		q.Set("long = ?", request.Long)
 
 	}
-	if request.Gmail != nil {
-		q.Set("gmail = ?", request.Gmail)
 
-	}
 	q.Set("updated_at = ?", time.Now())
 	q.Set("updated_by = ?", dataCtx.UserId)
 
 	_, err1 := q.Exec(ctx)
 	if err1 != nil {
 		return &pkg.Error{
-			Err:    pkg.WrapError(err1, "updating user"),
+			Err:    pkg.WrapError(err1, "updating workplaces"),
 			Status: http.StatusInternalServerError,
 		}
 	}
@@ -225,5 +192,5 @@ func (r Repository) AdminUpdate(ctx context.Context, request AdminUpdateRequest)
 
 func (r Repository) AdminDelete(ctx context.Context, id, username string) *pkg.Error {
 
-	return r.DeleteRow(ctx, "users", id, username)
+	return r.DeleteRow(ctx, "workplaces", id, username)
 }

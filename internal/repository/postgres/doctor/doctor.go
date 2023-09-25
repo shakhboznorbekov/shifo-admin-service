@@ -1,4 +1,4 @@
-package user
+package doctor
 
 import (
 	"context"
@@ -12,7 +12,6 @@ import (
 	"shifo-backend-website/internal/entity"
 	"shifo-backend-website/internal/pkg"
 	"shifo-backend-website/internal/pkg/repository/postgres"
-	"shifo-backend-website/internal/service/hash"
 )
 
 type Repository struct {
@@ -42,28 +41,26 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	query := fmt.Sprintf(`
 		SELECT
 			id,
-			username,
 			first_name,
-			last_name,
-			status
+			last_name
 		FROM
-		    users
+		    doctors
 		%s %s %s
 	`, whereQuery, limitQuery, offsetQuery)
 
 	rows, er := r.QueryContext(ctx, query)
 	if er != nil {
 		return nil, 0, &pkg.Error{
-			Err:    pkg.WrapError(er, "selecting user list"),
+			Err:    pkg.WrapError(er, "selecting doctors list"),
 			Status: http.StatusInternalServerError,
 		}
 	}
 	var list []AdminGetListResponse
 	for rows.Next() {
 		var detail AdminGetListResponse
-		if er = rows.Scan(&detail.Id, &detail.Username, &detail.FirstName, &detail.LastName, &detail.Status); er != nil {
+		if er = rows.Scan(&detail.Id, &detail.FirstName, &detail.LastName); er != nil {
 			return nil, 0, &pkg.Error{
-				Err:    pkg.WrapError(er, "scanning user"),
+				Err:    pkg.WrapError(er, "scanning doctors"),
 				Status: http.StatusInternalServerError,
 			}
 		}
@@ -73,13 +70,13 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	SELECT
 	COUNT(*)
 	FROM
-		users
+		doctors
 	%s
 	`, whereQuery)
 	countRows, er := r.QueryContext(ctx, countQuery)
 	if er != nil {
 		return nil, 0, &pkg.Error{
-			Err:    pkg.WrapError(er, "selecting user count"),
+			Err:    pkg.WrapError(er, "selecting doctors count"),
 			Status: http.StatusInternalServerError,
 		}
 	}
@@ -88,7 +85,7 @@ func (r Repository) AdminGetList(ctx context.Context, filter Filter) ([]AdminGet
 	for countRows.Next() {
 		if er = countRows.Scan(&count); er != nil {
 			return nil, 0, &pkg.Error{
-				Err:    pkg.WrapError(er, "scanning user count"),
+				Err:    pkg.WrapError(er, "scanning doctors count"),
 				Status: http.StatusInternalServerError,
 			}
 		}
@@ -109,20 +106,6 @@ func (r Repository) AdminGetById(ctx context.Context, id string) (AdminGetDetail
 	return detail, nil
 }
 
-func (r Repository) GetByFirstName(ctx context.Context, firstName string) (AdminGetDetail, *pkg.Error) {
-	var detail AdminGetDetail
-	err := r.NewSelect().Model(&detail).Where("first_name = ?", firstName).Scan(ctx)
-
-	if err != nil {
-		return AdminGetDetail{}, &pkg.Error{
-			Err:    err,
-			Status: http.StatusInternalServerError,
-		}
-	}
-
-	return detail, nil
-}
-
 func (r Repository) AdminCreate(ctx context.Context, request AdminCreateRequest) (AdminCreateResponse, *pkg.Error) {
 	var response AdminCreateResponse
 
@@ -130,24 +113,20 @@ func (r Repository) AdminCreate(ctx context.Context, request AdminCreateRequest)
 	if er != nil {
 		return AdminCreateResponse{}, er
 	}
-	if err := r.ValidateStruct(&request, "FirstName", "LastName", "Username", "Status", "Gmail", "Password"); err != nil {
+	if err := r.ValidateStruct(&request, "FirstName", "LastName", "SpecialtyId", "FileLink", "WorkExperience", "WorkplaceId", "WorkPrice", "StartWork", "EndWork"); err != nil {
 		return AdminCreateResponse{}, err
 	}
 
 	response.Id = uuid.NewString()
 	response.FirstName = request.FirstName
 	response.LastName = request.LastName
-	response.Username = request.Username
-	hashPassword, err2 := hash.HashPassword(request.Password)
-	if err2 != nil {
-		return AdminCreateResponse{}, &pkg.Error{
-			Err:    err2,
-			Status: http.StatusInternalServerError,
-		}
-	}
-	response.Status = request.Status
-	response.Password = hashPassword
-	response.Gmail = request.Gmail
+	response.SpecialtyId = request.SpecialtyId
+	response.FileLink = request.FileLink
+	response.WorkExperience = request.WorkExperience
+	response.WorkplaceId = request.WorkplaceId
+	response.WorkPrice = request.WorkPrice
+	response.StartWork = request.StartWork
+	response.EndWork = request.EndWork
 	response.CreatedBy = &dataCtx.UserId
 	response.CreatedAt = time.Now()
 	err := r.ManualInsert(ctx, &response, "AdminCreate")
@@ -167,7 +146,7 @@ func (r Repository) AdminUpdate(ctx context.Context, request AdminUpdateRequest)
 	if er != nil {
 		return er
 	}
-	q := r.NewUpdate().Table("users").Where("deleted_at is null AND id = ?", request.Id)
+	q := r.NewUpdate().Table("doctors").Where("deleted_at is null AND id = ?", request.Id)
 
 	if request.FirstName != nil {
 		q.Set("first_name = ?", request.FirstName)
@@ -177,29 +156,41 @@ func (r Repository) AdminUpdate(ctx context.Context, request AdminUpdateRequest)
 		q.Set("last_name = ?", request.LastName)
 
 	}
-	if request.Username != nil {
-		q.Set("username = ?", request.Username)
+	if request.SpecialtyId != nil {
+		q.Set("specialty_id = ?", request.SpecialtyId)
 
 	}
-	if request.Password != nil {
-		q.Set("password = ?", request.Password)
+	if request.FileLink != nil {
+		q.Set("file_link = ?", request.FileLink)
 
 	}
-	if request.Status != nil {
-		q.Set("status = ?", request.Status)
+	if request.WorkExperience != nil {
+		q.Set("work_experience = ?", request.WorkExperience)
 
 	}
-	if request.Gmail != nil {
-		q.Set("gmail = ?", request.Gmail)
-
+	if request.WorkplaceId != nil {
+		q.Set("workplace_id = ?", request.WorkplaceId)
 	}
+
+	if request.WorkPrice != nil {
+		q.Set("work_price = ?", request.WorkPrice)
+	}
+
+	if request.StartWork != nil {
+		q.Set("start_work = ?", request.StartWork)
+	}
+
+	if request.EndWork != nil {
+		q.Set("end_work = ?", request.EndWork)
+	}
+
 	q.Set("updated_at = ?", time.Now())
 	q.Set("updated_by = ?", dataCtx.UserId)
 
 	_, err1 := q.Exec(ctx)
 	if err1 != nil {
 		return &pkg.Error{
-			Err:    pkg.WrapError(err1, "updating user"),
+			Err:    pkg.WrapError(err1, "updating doctors"),
 			Status: http.StatusInternalServerError,
 		}
 	}
@@ -225,5 +216,5 @@ func (r Repository) AdminUpdate(ctx context.Context, request AdminUpdateRequest)
 
 func (r Repository) AdminDelete(ctx context.Context, id, username string) *pkg.Error {
 
-	return r.DeleteRow(ctx, "users", id, username)
+	return r.DeleteRow(ctx, "doctors", id, username)
 }

@@ -24,17 +24,19 @@ var scheme = []Scheme{
 		Description: "Create table: users.",
 		Query: `
 				CREATE TABLE IF NOT EXISTS users(
-				    id         text primary key not null ,
-  					username   text not null ,
-  					password   text,
-  					role       text not null ,
-  					status     boolean not null ,
+				    id         uuid primary key not null ,
+  					first_name varchar,
+  					last_name  varchar,
+  					username   varchar (150),
+  					password   varchar,
+  					status     user_statuses,
+  					gmail      varchar,
   					created_at timestamp default now(),
   					deleted_at timestamp,
   					updated_at timestamp,
-  					updated_by text references users(id),
-  					created_by text references users(id),
-  					deleted_by text references users(id)
+  					updated_by uuid references users(id),
+  					created_by uuid references users(id),
+  					deleted_by uuid references users(id)
 				);
 			`,
 	},
@@ -53,182 +55,116 @@ var scheme = []Scheme{
 	},
 	{
 		Index:       3,
-		Description: "Create table: contacts",
+		Description: "Create table: doctors",
 		Query: `
-			CREATE TABLE IF NOT EXISTS contacts(
-			    id            text primary key not null ,
-				icon          varchar(12),
-				title         jsonb,
-				description   jsonb,
-				key           varchar(20),
-				link          text,
-				status        boolean default true,
-				created_at    timestamp default now(),
-				deleted_at    timestamp,
-				updated_at    timestamp,
-				updated_by    text references users(id),
-				created_by    text references users(id),
-		        deleted_by    text references users(id)
+			CREATE TABLE IF NOT EXISTS doctors(
+			    id              uuid primary key not null ,
+   				first_name      varchar,
+   				last_name       varchar,
+   				specialty_id    uuid references specialties(id),
+   				file_link       varchar,
+   				work_experience text,
+   				workplace_id    uuid references workplaces(id),
+   				work_price      varchar,
+   				start_work      timestamp,
+   				end_work        timestamp,
+   				created_at      timestamp default now(),
+   				deleted_at      timestamp,
+   				updated_at      timestamp,
+   				updated_by uuid references users(id),
+   				created_by uuid references users(id),
+   				deleted_by uuid references users(id)
 			);
 		`,
 	},
 	{
 		Index:       4,
-		Description: "Create table: faqs",
+		Description: "Create table: specialties",
 		Query: `
-			CREATE TABLE IF NOT EXISTS faqs(
-			    id            text primary key not null ,
-   				question      jsonb,
-   				answer        jsonb,
-   				status        boolean  default false,
-   				created_at    timestamp default now(),
-   				deleted_at    timestamp,
-   				updated_at    timestamp,
-   				updated_by    text references users(id),
-   				created_by    text references users(id),
-   				deleted_by    text references users(id)
+			CREATE TABLE IF NOT EXISTS specialties(
+			    id         uuid primary key not null ,
+    			name       varchar not null,
+    			created_at timestamp default now(),
+    			deleted_at timestamp,
+    			updated_at timestamp,
+    			updated_by uuid references users(id),
+    			created_by uuid references users(id),
+    			deleted_by uuid references users(id)
 			);
 		`,
 	},
 	{
 		Index:       5,
-		Description: "Create table: menus",
+		Description: "Create table: workplaces",
 		Query: `
-			CREATE TABLE IF NOT EXISTS menus(
-			    id            text primary key not null ,
-   				name          jsonb not null ,
-   				parent_id     text  references menus(id),
-   				status        boolean default false,
-   				index_number  integer,
-   				path          text,
-   				created_at    timestamp default now(),
-   				deleted_at    timestamp,
-   				updated_at    timestamp,
-   				updated_by    text references users(id),
-   				created_by    text references users(id),
-   				deleted_by    text references users(id)
+			CREATE TABLE IF NOT EXISTS workplaces(
+			    id         uuid primary key not null ,
+    			name       varchar not null,
+    			address    varchar,
+    			lat        float,
+    			long       float,
+    			created_at timestamp default now(),
+    			deleted_at timestamp,
+    			updated_at timestamp,
+    			updated_by uuid references users(id),
+    			created_by uuid references users(id),
+    			deleted_by uuid references users(id)
 			);
 		`,
 	},
 	{
 		Index:       6,
-		Description: "Create table: opportunities",
-		Query: `
-			CREATE TABLE IF NOT EXISTS opportunities(
-				    id            text primary key not null ,
-    				title         jsonb,
-    				description   jsonb,
-    				status        boolean,
-    				index_number  integer not null,
-    				created_at    timestamp default now(),
-    				deleted_at    timestamp,
-    				updated_at    timestamp,
-    				updated_by    text references users(id),
-    				created_by    text references users(id),
-    				deleted_by    text references users(id)
-				);
-			`,
-	},
-	{
-		Index:       7,
 		Description: "Create user with username:admin, password: 1",
 		Query: `
-				INSERT INTO users (id, username, password, status, role) SElECT 'bfab8727-f6b9-48af-abcc-cb33307f0157','admin', '$2a$09$p71tEyRUhvkI8RWacTjCv.VLp51rUkUZnU8ScQtVb01ElxLIT8PUG','True', 'Admin' WHERE NOT EXISTS (SELECT id FROM users WHERE id = 'bfab8727-f6b9-48af-abcc-cb33307f0157');
+				INSERT INTO users (id,first_name,last_name, username, gmail, password, status) SElECT 'bfab8727-f6b9-48af-abcc-cb33307f0157','admin','admin','admin', 'shakke.gmail.com', '$2a$09$p71tEyRUhvkI8RWacTjCv.VLp51rUkUZnU8ScQtVb01ElxLIT8PUG','at_work' WHERE NOT EXISTS (SELECT id FROM users WHERE id = 'bfab8727-f6b9-48af-abcc-cb33307f0157');
 			`,
 	},
-	{
-		Index:       8,
-		Description: "Create table: opportunity_files",
-		Query: `
-			CREATE TABLE IF NOT EXISTS opportunity_files(
-			    id                   text primary key not null ,
-   				opportunity_id       text not null references opportunities(id),
-   				file_link            text,
-   				index_number         integer not null,
-   				type                 integer not null,
-   				main                 boolean default false,
-   				created_at           timestamp default now(),
-   				deleted_at           timestamp,
-   				updated_at           timestamp,
-   				updated_by           text references users(id),
-   				created_by           text references users(id),
-   				deleted_by           text references users(id)
-			);
-		`,
-	},
-	{
-		Index:       9,
-		Description: "Create table: posts",
-		Query: `
-			CREATE TABLE IF NOT EXISTS posts(
-			    id            text primary key not null ,
-  				title         jsonb,
-  				description   jsonb,
-  				created_at    timestamp default now(),
-  				deleted_at    timestamp,
-  				updated_at    timestamp,
-  				updated_by    text references users(id),
-  				created_by    text references users(id),
-  				deleted_by    text references users(id)
-			);
-		`,
-	},
-	{
-		Index:       10,
-		Description: "Create table: post_files",
-		Query: `
-			CREATE TABLE IF NOT EXISTS post_files(
-			     id            text primary key not null ,
-    			 post_id       text not null references posts(id),
-    			 file_link     text,
-    			 main          boolean default false,
-    			 type          integer default 1,
-    			 created_at    timestamp default now(),
-    			 deleted_at    timestamp,
-    			 updated_at    timestamp,
-    			 updated_by    text references users(id),
-    			 created_by    text references users(id),
-    			 deleted_by    text references users(id)
-			);
-		`,
-	},
-	{
-		Index:       11,
-		Description: "Create table: requests",
-		Query: `
-			CREATE TABLE IF NOT EXISTS requests(
-                 id            text primary key not null ,
-   				 title         text,
-   				 description   text,
-   				 email         text,
-   				 phone         text,
-   				 created_at    timestamp default now(),
-   				 deleted_at    timestamp,
-   				 updated_at    timestamp,
-   				 updated_by    text references users(id),
-   				 created_by    text references users(id),
-   				 deleted_by    text references users(id)	
-			);
-			`,
-	},
-	{
-		Index:       12,
-		Description: "Create table: request_files",
-		Query: `
-			CREATE TABLE IF NOT EXISTS request_files(
-			    id            text primary key not null ,
-				request_id    text not null references requests(id),
-				file_link     text,
-				type          integer,
-				created_at    timestamp default now(),
-				deleted_at    timestamp,
-				updated_at    timestamp,
-				updated_by    text references users(id),
-				created_by    text references users(id),
-				deleted_by    text references users(id)
-			);
-		`,
-	},
+	//{
+	//	Index:       7,
+	//	Description: "Create Enum for user_status",
+	//	Query: `
+	//			DROP TYPE  IF EXISTS user_statuses;
+	//			CREATE TYPE user_statuses AS ENUM ('at_work', 'off_work');
+	//	`,
+	//},
+
+	//{
+	//	Index:       11,
+	//	Description: "Create table: requests",
+	//	Query: `
+	//		CREATE TABLE IF NOT EXISTS requests(
+	//             id            text primary key not null ,
+	//			 title         text,
+	//			 description   text,
+	//			 email         text,
+	//			 phone         text,
+	//			 created_at    timestamp default now(),
+	//			 deleted_at    timestamp,
+	//			 updated_at    timestamp,
+	//			 updated_by    text references users(id),
+	//			 created_by    text references users(id),
+	//			 deleted_by    text references users(id)
+	//		);
+	//		`,
+	//},
+	//{
+	//	Index:       12,
+	//	Description: "Create table: request_files",
+	//	Query: `
+	//		CREATE TABLE IF NOT EXISTS request_files(
+	//		    id            text primary key not null ,
+	//			request_id    text not null references requests(id),
+	//			file_link     text,
+	//			type          integer,
+	//			created_at    timestamp default now(),
+	//			deleted_at    timestamp,
+	//			updated_at    timestamp,
+	//			updated_by    text references users(id),
+	//			created_by    text references users(id),
+	//			deleted_by    text references users(id)
+	//		);
+	//	`,
+	//},
 }
 
 // Migrate creates the scheme in the database.

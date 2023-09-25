@@ -9,10 +9,12 @@ type User struct {
 	bun.BaseModel `bun:"table:users"`
 
 	Id        string     `json:"id" bun:"id"`
+	FirstName string     `json:"first_name" bun:"first_name"`
+	LastName  string     `json:"last_name" bun:"last_name"`
 	Username  string     `json:"username" bun:"username"`
 	Password  *string    `json:"password" bun:"password"`
-	Role      string     `json:"role" bun:"role"`
 	Status    bool       `json:"status" bun:"status"`
+	Gmail     string     `json:"gmail" bun:"gmail"`
 	CreatedAt time.Time  `json:"-" bun:"created_at"`
 	CreatedBy *string    `json:"-" bun:"created_by"`
 	UpdatedAt *time.Time `json:"-" bun:"updated_at"`
@@ -23,3 +25,4 @@ type User struct {
 
 // Role
 //1. Admin
+//2. User

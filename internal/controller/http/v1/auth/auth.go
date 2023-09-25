@@ -1,10 +1,10 @@
 package auth
 
 import (
+	"net/http"
 	auth_service "shifo-backend-website/internal/auth"
 	"shifo-backend-website/internal/service/hash"
 	"shifo-backend-website/internal/service/request"
-	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -18,21 +18,10 @@ func NewController(user User, auth Auth) *Controller {
 	return &Controller{user, auth}
 }
 
-// SignIn godoc
-// @Summary Sign In
-// @Description  Create Author
-// @Tags auth
-// @Accept json
-// @Produce json
-// @Param profile body auth.SignIn true "CreateAuthorRequestBody"
-// @Success 200 {object} auth.AuthResponse
-// @Response 400 {object} string "Invalid argument"
-// @Failure 500 {object} string "Server Error"
-// @Router /api/v1/user/sign-in [POST]
 func (ac Controller) SignIn(c *gin.Context) {
 	var data auth_service.SignIn
 
-	if er := request.BindFunc(c, &data, "Username", "Password"); er != nil {
+	if er := request.BindFunc(c, &data, "FirstName", "Password"); er != nil {
 		c.JSON(er.Status, gin.H{
 			"message": er.Err.Error(),
 			"status":  false,
@@ -41,7 +30,7 @@ func (ac Controller) SignIn(c *gin.Context) {
 		return
 	}
 
-	userDetail, err := ac.user.GetByUsername(c, data.Username)
+	userDetail, err := ac.user.GetByFirstName(c, data.FirstName)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{
 			"message": "user not found",
@@ -60,8 +49,8 @@ func (ac Controller) SignIn(c *gin.Context) {
 
 	var generateTokenData auth_service.GenerateToken
 
+	generateTokenData.FirstName = userDetail.FirstName
 	generateTokenData.Username = userDetail.Username
-	generateTokenData.Role = userDetail.Role
 	token, err2 := ac.auth.GenerateToken(c, generateTokenData)
 
 	if err2 != nil {
